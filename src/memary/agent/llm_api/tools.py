@@ -3,7 +3,7 @@
 import urllib
 import logging
 import requests
-
+import os
 
 def smart_urljoin(base_url, relative_url):
     """urljoin is stupid and wants a trailing / at the end of the endpoint address, or it will chop the suffix off"""
@@ -53,8 +53,8 @@ def openai_chat_completions_request(url, api_key, data):
 
 def ollama_chat_completions_request(messages, model):
     """sends chat request to model running on Ollama"""
-
-    url = "http://localhost:11434/api/chat"
+    ollama_base_url = os.getenv("OLLAMA_HOST")
+    url = f"${ollama_base_url}/api/chat"
     data = {"model": model, "messages": messages, "stream": False}
 
     logging.info(f"Sending request to {url}")

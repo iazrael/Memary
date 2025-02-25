@@ -68,14 +68,15 @@ class Agent(object):
         self.model = llm_model_name
 
         googlemaps_api_key = os.getenv("GOOGLEMAPS_API_KEY")
-        pplx_api_key = os.getenv("PERPLEXITY_API_KEY")
 
         # initialize APIs
         self.load_llm_model(llm_model_name)
         self.load_vision_model(vision_model_name)
-        self.query_llm = Perplexity(
-            api_key=pplx_api_key, model="mistral-7b-instruct", temperature=0.5
-        )
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        openai_base_url = os.getenv("OPENAI_BASE_URL")
+        openai_query_model = os.getenv("OPENAI_QUERY_MODEL")
+        self.query_llm = OpenAI(api_base=openai_base_url, api_key=openai_api_key, model=openai_query_model)
+
         self.gmaps = googlemaps.Client(key=googlemaps_api_key)
         Settings.llm = self.llm
         Settings.chunk_size = 512
@@ -140,7 +141,8 @@ class Agent(object):
             self.llm = OpenAI(model="gpt-3.5-turbo-instruct")
         else:
             try:
-                self.llm = Ollama(model=llm_model_name, request_timeout=60.0)
+                ollama_base_url = os.getenv("OLLAMA_HOST")
+                self.llm = Ollama(base_url=ollama_base_url, model=llm_model_name, request_timeout=60.0)
             except:
                 raise ("Please provide a proper llm_model_name.")
 
@@ -155,9 +157,11 @@ class Agent(object):
             )
         else:
             try:
-                self.mm_model = OllamaMultiModal(model=vision_model_name)
-            except:
-                raise ("Please provide a proper vision_model_name.")
+                ollama_base_url = os.getenv("OLLAMA_HOST")
+                print(f"ollama_base_url=${ollama_base_url}")
+                self.mm_model = OllamaMultiModal(base_url=ollama_base_url, model=vision_model_name, request_timeout=60)
+            except Exception as e:
+                raise (f"Please provide a proper vision_model_name.\n{e}")
 
     def external_query(self, query: str):
         messages_dict = [

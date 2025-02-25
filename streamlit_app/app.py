@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import os
 import random
 import sys
@@ -7,7 +10,7 @@ import ollama
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
-from dotenv import load_dotenv
+
 from neo4j import GraphDatabase
 from falkordb import FalkorDB
 from pyvis.network import Network
@@ -22,7 +25,7 @@ sys.path.append(parent_dir + "/src")
 
 from memary.agent.chat_agent import ChatAgent
 
-load_dotenv()
+
 system_persona_txt = "data/system_persona.txt"
 user_persona_txt = "data/user_persona.txt"
 past_chat_json = "data/past_chat.json"
@@ -96,9 +99,13 @@ def get_models(llm_models, vision_models):
         ollama_info = ollama.list()
         for e in ollama_info["models"]:
             models.add(e["model"])
-        if "llava:latest" in models:
-            vision_models.append("llava:latest")
-            models.remove("llava:latest")
+        
+        # 将包含llava:和llama3.2-vision:的模型加入vision_models
+        vision_models_to_add = [model for model in models if "llava:" in model or "llama3.2-vision:" in model]
+        for model in vision_models_to_add:
+            vision_models.append(model)
+            models.remove(model)
+            
         llm_models.extend(list(models))
     except:
         print("No Ollama instance detected.")
